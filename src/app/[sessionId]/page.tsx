@@ -4,6 +4,7 @@ import Head from 'next/head';
 import { useParams, useRouter } from 'next/navigation'; 
 import { useEffect, useState } from 'react';
 import { api } from '~/trpc/react';
+import { Fireworks } from '@fireworks-js/react';
 
 interface UserInfo {
   id: number;
@@ -19,6 +20,7 @@ export default function SessionPage() {
   const [newStoryTitle, setNewStoryTitle] = useState('');
   const [selectedVote, setSelectedVote] = useState<string | null>(null);
   const [isFlipping, setIsFlipping] = useState(false);
+  const [showFireworks, setShowFireworks] = useState(false);
   const [flyingNumber, setFlyingNumber] = useState<{value: string, color: string, active: boolean}>({value: "", color: "", active: false});
   const [flyingNumberPosition, setFlyingNumberPosition] = useState({startX: 0, startY: 0, endX: 0, endY: 0});
 
@@ -45,6 +47,30 @@ export default function SessionPage() {
       refetchInterval: 5000
     }
   );
+  
+  // Check for matching votes when votes are revealed
+  useEffect(() => {
+    if (sessionDetails?.votesRevealed && sessionDetails?.votes && sessionDetails.votes.length > 1) {
+      // Extract all vote values
+      const voteValues = sessionDetails.votes.map(v => v.voteValue);
+      
+      // Check if all votes are the same
+      const allVotesMatch = voteValues.every(v => v === voteValues[0]);
+      
+      if (allVotesMatch) {
+        // Show fireworks animation for all users
+        setShowFireworks(true);
+        
+        // Hide fireworks after 3 seconds
+        setTimeout(() => {
+          setShowFireworks(false);
+        }, 3000);
+      } else {
+        // Make sure fireworks are off when votes don't match
+        setShowFireworks(false);
+      }
+    }
+  }, [sessionDetails?.votesRevealed, sessionDetails?.votes]);
 
   const addStoryMutation = api.poker.addStory.useMutation({
     onSuccess: () => {
@@ -216,6 +242,55 @@ export default function SessionPage() {
         }
       ` }} />
       <main className="min-h-screen bg-gray-900 p-4 text-white md:p-8">
+        {/* Fireworks celebration when all votes match */}
+        {showFireworks && (
+          <div className="fixed inset-0 z-50 pointer-events-none">
+            <Fireworks
+              options={{
+                rocketsPoint: {
+                  min: 0,
+                  max: 100
+                },
+                opacity: 0.8,
+                acceleration: 1.05,
+                friction: 0.97,
+                gravity: 1.5,
+                particles: 90,
+                explosion: 10,
+                intensity: 30,
+                traceLength: 3,
+                flickering: 30,
+                hue: {
+                  min: 0,
+                  max: 360
+                },
+                delay: {
+                  min: 15,
+                  max: 30
+                },
+                brightness: {
+                  min: 50,
+                  max: 80
+                },
+                decay: {
+                  min: 0.015,
+                  max: 0.03
+                }
+              }}
+              style={{
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                position: 'fixed',
+                background: 'transparent',
+                zIndex: 1000,
+                pointerEvents: 'none'
+              }}
+            />
+          </div>
+        )}
+        
         {/* Flying number animation */}
         {flyingNumber.active && (
           <div className={`flying-number ${flyingNumber.color}`}>
@@ -429,7 +504,27 @@ export default function SessionPage() {
             {votesRevealed && currentStory && (
                 <div className="mt-4">
                     <h3 className="text-lg font-semibold">Hand Results:</h3>
-                    {/* Basic result display, can be enhanced with average, consensus, etc. */}
+                    {/* Display consensus celebration when all votes match */}
+                    {participantVotes.size > 1 && (() => {
+                        const voteValues = Array.from(participantVotes.values());
+                        const allVotesMatch = voteValues.every(v => v === voteValues[0]);
+                        
+                        if (allVotesMatch) {
+                            return (
+                                <div className="mt-2 mb-3 p-2 bg-green-700 bg-opacity-40 rounded-md border border-green-500 animate-pulse">
+                                    <p className="text-center font-bold text-green-300 text-xl">
+                                        🎉 Perfect Consensus Achieved! 🎉
+                                    </p>
+                                    <p className="text-center text-sm text-green-200">
+                                        Everyone voted {voteValues[0]}
+                                    </p>
+                                </div>
+                            );
+                        }
+                        return null;
+                    })()}
+                    
+                    {/* Basic result display */}
                     <ul className="list-disc pl-5">
                     {Array.from(participantVotes.entries()).map(([participantId, voteVal]) => (
                         <li key={participantId}>{participantMap.get(participantId)?.name}: {voteVal}</li>
