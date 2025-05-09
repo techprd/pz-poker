@@ -133,35 +133,6 @@ export default function SessionPage() {
           <h1 className="mb-2 text-3xl font-bold">{sessionName}</h1>
           <p className="mb-6 text-sm text-gray-400">Session ID: <span className="font-mono">{sessionId}</span> (Share this with your team)</p>
 
-          {/* Current Story and Voting Area */}
-          <div className="mb-8 rounded-lg bg-gray-800 p-6 shadow-xl">
-            {currentStory ? (
-              <>
-                <h2 className="text-2xl font-semibold">Current Story: {currentStory.title}</h2>
-                {currentStory.description && <p className="mt-1 text-gray-300">{currentStory.description}</p>}
-                <div className="mt-6">
-                  <h3 className="mb-3 text-lg font-medium">Cast Your Vote:</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {pokerValues.map((value) => (
-                      <button
-                        key={value}
-                        onClick={() => handleCastVote(value)}
-                        disabled={castVoteMutation.isPending || votesRevealed}
-                        className={`rounded-lg border-2 px-4 py-3 font-bold transition-all duration-150 ease-in-out hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60
-                                      ${selectedVote === value ? 'border-purple-500 bg-purple-600 text-white ring-2 ring-purple-400' : 'border-gray-600 bg-gray-700 hover:bg-gray-600'}
-                                      ${votesRevealed ? 'cursor-not-allowed opacity-60' : ''}`}
-                      >
-                        {value}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </>
-            ) : (
-              <p className="text-center text-xl text-gray-400">No story selected for voting. Host can add one below.</p>
-            )}
-          </div>
-
           {/* Participants and Votes */}
           <div className="mb-8 rounded-lg bg-gray-800 p-6 shadow-xl">
             <h2 className="mb-4 text-xl font-semibold">Participants ({sessionParticipants.length})</h2>
@@ -272,6 +243,34 @@ export default function SessionPage() {
             )}
           </div>
 
+                      {/* Current Story and Voting Area */}
+                      <div className="mb-8 rounded-lg bg-gray-800 p-6 shadow-xl">
+            {currentStory ? (
+              <>
+                <h2 className="text-2xl font-semibold">Current Story: {currentStory.title}</h2>
+                {currentStory.description && <p className="mt-1 text-gray-300">{currentStory.description}</p>}
+                <div className="mt-6">
+                  <h3 className="mb-3 text-lg font-medium">Cast Your Vote:</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {pokerValues.map((value) => (
+                      <button
+                        key={value}
+                        onClick={() => handleCastVote(value)}
+                        disabled={castVoteMutation.isPending || votesRevealed}
+                        className={`rounded-lg border-2 px-4 py-3 font-bold transition-all duration-150 ease-in-out hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60
+                                      ${selectedVote === value ? 'border-purple-500 bg-purple-600 text-white ring-2 ring-purple-400' : 'border-gray-600 bg-gray-700 hover:bg-gray-600'}
+                                      ${votesRevealed ? 'cursor-not-allowed opacity-60' : ''}`}
+                      >
+                        {value}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p className="text-center text-xl text-gray-400">No story selected for voting. Host can add one below.</p>
+            )}
+                      </div>
 
           {/* Host Controls: Add Story / Select Next Story */}
           {currentUser?.isHost && (
