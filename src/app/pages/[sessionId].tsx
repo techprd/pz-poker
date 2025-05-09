@@ -1,7 +1,8 @@
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-import { api } from "~/trpc/server";
+"use client"
 import Head from 'next/head';
+import { useRouter } from 'next/navigation'; 
+import { useEffect, useState } from 'react';
+import { api } from '~/trpc/react';
 
 interface UserInfo {
   id: number;

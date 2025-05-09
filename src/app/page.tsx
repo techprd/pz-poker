@@ -1,12 +1,9 @@
 "use client";
-import Link from "next/link";
 
-import { LatestPost } from "~/app/_components/post";
-import { api, HydrateClient } from "~/trpc/server";
-
-import { useState } from 'react';
-import { useRouter } from 'next/router';
 import Head from 'next/head';
+import { useRouter } from 'next/navigation'; 
+import { useState } from 'react';
+import { api } from '~/trpc/react';
 
 export default function HomePage() {
   const router = useRouter();
