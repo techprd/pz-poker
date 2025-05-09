@@ -143,46 +143,46 @@ export default function SessionPage() {
       userCards.forEach(card => {
         if (card.getAttribute('data-participant-id') === currentUser.id.toString()) {
           userCardElement = card as HTMLElement;
+          if (userCardElement) {
+            const cardRect = userCardElement.getBoundingClientRect();
+            const cardCenterX = cardRect.left + cardRect.width / 2;
+            const cardCenterY = cardRect.top + cardRect.height / 2;
+    
+            setFlyingNumber({
+              value: voteValue,
+              color: chipColor.includes('text-white') ? 'text-white' : 'text-gray-900',
+              active: true
+            });
+            setFlyingNumberPosition({ startX: chipCenterX, startY: chipCenterY, endX: cardCenterX, endY: cardCenterY });
+    
+            setTimeout(() => {
+              setFlyingNumber(prev => ({...prev, active: false}));
+              setSelectedVote(voteValue);
+              castVoteMutation.mutate({ sessionId, participantId: currentUser.id, voteValue });
+    
+              if (betValue.trim() !== '' && sessionDetails.currentStory?.id) {
+                betMutation.mutate({
+                  participantId: currentUser.id,
+                  storyId: sessionDetails.currentStory.id,
+                  betValue,
+                });
+              }
+            }, 1000);
+          } else {
+            // Fallback if card element not found (should not happen ideally)
+            setSelectedVote(voteValue);
+            castVoteMutation.mutate({ sessionId, participantId: currentUser.id, voteValue });
+            if (betValue.trim() !== '' && sessionDetails.currentStory?.id) {
+                betMutation.mutate({
+                  participantId: currentUser.id,
+                  storyId: sessionDetails.currentStory.id,
+                  betValue,
+                });
+            }
+          }
         }
       });
 
-      if (userCardElement) {
-        const cardRect = userCardElement.getBoundingClientRect();
-        const cardCenterX = cardRect.left + cardRect.width / 2;
-        const cardCenterY = cardRect.top + cardRect.height / 2;
-
-        setFlyingNumber({
-          value: voteValue,
-          color: chipColor.includes('text-white') ? 'text-white' : 'text-gray-900',
-          active: true
-        });
-        setFlyingNumberPosition({ startX: chipCenterX, startY: chipCenterY, endX: cardCenterX, endY: cardCenterY });
-
-        setTimeout(() => {
-          setFlyingNumber(prev => ({...prev, active: false}));
-          setSelectedVote(voteValue);
-          castVoteMutation.mutate({ sessionId, participantId: currentUser.id, voteValue });
-
-          if (betValue.trim() !== '' && sessionDetails.currentStory?.id) {
-            betMutation.mutate({
-              participantId: currentUser.id,
-              storyId: sessionDetails.currentStory.id,
-              betValue,
-            });
-          }
-        }, 1000);
-      } else {
-        // Fallback if card element not found (should not happen ideally)
-        setSelectedVote(voteValue);
-        castVoteMutation.mutate({ sessionId, participantId: currentUser.id, voteValue });
-        if (betValue.trim() !== '' && sessionDetails.currentStory?.id) {
-            betMutation.mutate({
-              participantId: currentUser.id,
-              storyId: sessionDetails.currentStory.id,
-              betValue,
-            });
-        }
-      }
     }
   };
 
