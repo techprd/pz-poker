@@ -63,20 +63,31 @@ export default function HomePage() {
             {/* Create Session Form */}
             <form onSubmit={handleCreateSession} className="flex flex-col gap-4 rounded-xl bg-white/10 p-6 shadow-lg backdrop-blur-md">
               <h2 className="text-2xl font-bold">Create New Session</h2>
-              <input
-                type="text"
-                placeholder="Session Name"
-                value={sessionName}
-                onChange={(e) => setSessionName(e.target.value)}
-                className="rounded-md border border-transparent bg-white/20 px-4 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-              <input
-                type="text"
-                placeholder="Your Name (Host)"
-                value={hostName}
-                onChange={(e) => setHostName(e.target.value)}
-                className="rounded-md border border-transparent bg-white/20 px-4 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
+
+              <div className="flex flex-col">
+                <label htmlFor="sessionName" className="mb-1 text-white font-medium">Session Name</label>
+                <input
+                  id="sessionName"
+                  type="text"
+                  placeholder="Session Name"
+                  value={sessionName}
+                  onChange={(e) => setSessionName(e.target.value)}
+                  className="rounded-md border border-transparent bg-white/20 px-4 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label htmlFor="hostName" className="mb-1 text-white font-medium">Your Name (Host)</label>
+                <input
+                  id="hostName"
+                  type="text"
+                  placeholder="Your Name (Host)"
+                  value={hostName}
+                  onChange={(e) => setHostName(e.target.value)}
+                  className="rounded-md border border-transparent bg-white/20 px-4 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
               <button
                 type="submit"
                 disabled={createSessionMutation.isPending}
@@ -89,20 +100,31 @@ export default function HomePage() {
             {/* Join Session Form */}
             <form onSubmit={handleJoinSession} className="flex flex-col gap-4 rounded-xl bg-white/10 p-6 shadow-lg backdrop-blur-md">
               <h2 className="text-2xl font-bold">Join Existing Session</h2>
-              <input
-                type="text"
-                placeholder="Session ID"
-                value={joinSessionId}
-                onChange={(e) => setJoinSessionId(e.target.value)}
-                className="rounded-md border border-transparent bg-white/20 px-4 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-              <input
-                type="text"
-                placeholder="Your Name"
-                value={joinUserName}
-                onChange={(e) => setJoinUserName(e.target.value)}
-                className="rounded-md border border-transparent bg-white/20 px-4 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
+
+              <div className="flex flex-col">
+                <label htmlFor="joinSessionId" className="mb-1 text-white font-medium">Session ID</label>
+                <input
+                  id="joinSessionId"
+                  type="text"
+                  placeholder="Session ID"
+                  value={joinSessionId}
+                  onChange={(e) => setJoinSessionId(e.target.value)}
+                  className="rounded-md border border-transparent bg-white/20 px-4 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label htmlFor="joinUserName" className="mb-1 text-white font-medium">Your Name</label>
+                <input
+                  id="joinUserName"
+                  type="text"
+                  placeholder="Your Name"
+                  value={joinUserName}
+                  onChange={(e) => setJoinUserName(e.target.value)}
+                  className="rounded-md border border-transparent bg-white/20 px-4 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
               <button
                 type="submit"
                 disabled={joinSessionMutation.isPending}

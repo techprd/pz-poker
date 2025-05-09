@@ -1,6 +1,7 @@
 "use client"
+
 import Head from 'next/head';
-import { useRouter } from 'next/navigation'; 
+import { useParams, useRouter } from 'next/navigation'; 
 import { useEffect, useState } from 'react';
 import { api } from '~/trpc/react';
 
@@ -12,12 +13,12 @@ interface UserInfo {
 
 export default function SessionPage() {
   const router = useRouter();
-  const { sessionId } = router.query as { sessionId: string };
+  const params = useParams();
+  const sessionId = params.sessionId as string;
   const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
   const [newStoryTitle, setNewStoryTitle] = useState('');
   const [selectedVote, setSelectedVote] = useState<string | null>(null);
 
-  // Fetch current user info from localStorage
   useEffect(() => {
     if (sessionId) {
       const storedUser = localStorage.getItem(`pokerUser-${sessionId}`);
@@ -26,11 +27,8 @@ export default function SessionPage() {
             setCurrentUser(JSON.parse(storedUser));
         } catch (e) {
             console.error("Failed to parse user info from localStorage", e);
-            // router.push('/'); // Or handle error appropriately
         }
       } else {
-        // If no user info, redirect to join, or prompt for name
-        // For simplicity, redirecting, but ideally you'd have a modal to join.
         alert("No user information found for this session. Please join the session again.");
         router.push('/');
       }
@@ -38,10 +36,10 @@ export default function SessionPage() {
   }, [sessionId, router]);
 
   const { data: sessionDetails, refetch: refetchSessionDetails, isLoading } = api.poker.getSessionDetails.useQuery(
-    { sessionId: sessionId as string },
+    { sessionId },
     {
-      enabled: !!sessionId && !!currentUser, // Only run if sessionId and currentUser are available
-      refetchInterval: 5000, // Poll every 5 seconds for updates
+      enabled: !!sessionId && !!currentUser,
+      refetchInterval: 5000,
       onError: (error) => {
         alert(`Error fetching session: ${error.message}`);
         router.push('/');
@@ -59,9 +57,7 @@ export default function SessionPage() {
   });
 
   const castVoteMutation = api.poker.castVote.useMutation({
-    onSuccess: () => {
-      refetchSessionDetails(); // Refetch to see others' "voted" status
-    },
+    onSuccess: () => refetchSessionDetails(),
     onError: (error) => alert(`Error casting vote: ${error.message}`),
   });
 
@@ -77,7 +73,6 @@ export default function SessionPage() {
     },
     onError: (error) => alert(`Error clearing votes: ${error.message}`),
   });
-
 
   const handleAddStory = (e: React.FormEvent) => {
     e.preventDefault();
