@@ -1,2 +1,2 @@
-# pz-pocker
-PZ Hacketton 
+# pz-poker
+PZ Hackathon 
