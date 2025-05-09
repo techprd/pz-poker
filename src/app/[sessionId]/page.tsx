@@ -133,51 +133,104 @@ export default function SessionPage() {
           <h1 className="mb-2 text-3xl font-bold">{sessionName}</h1>
           <p className="mb-6 text-sm text-gray-400">Session ID: <span className="font-mono">{sessionId}</span> (Share this with your team)</p>
 
-          {/* Current Story and Voting Area */}
-          <div className="mb-8 rounded-lg bg-gray-800 p-6 shadow-xl">
-            {currentStory ? (
-              <>
-                <h2 className="text-2xl font-semibold">Current Story: {currentStory.title}</h2>
-                {currentStory.description && <p className="mt-1 text-gray-300">{currentStory.description}</p>}
-                <div className="mt-6">
-                  <h3 className="mb-3 text-lg font-medium">Cast Your Vote:</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {pokerValues.map((value) => (
-                      <button
-                        key={value}
-                        onClick={() => handleCastVote(value)}
-                        disabled={castVoteMutation.isPending || votesRevealed}
-                        className={`rounded-lg border-2 px-4 py-3 font-bold transition-all duration-150 ease-in-out hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60
-                                      ${selectedVote === value ? 'border-purple-500 bg-purple-600 text-white ring-2 ring-purple-400' : 'border-gray-600 bg-gray-700 hover:bg-gray-600'}
-                                      ${votesRevealed ? 'cursor-not-allowed opacity-60' : ''}`}
-                      >
-                        {value}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </>
-            ) : (
-              <p className="text-center text-xl text-gray-400">No story selected for voting. Host can add one below.</p>
-            )}
-          </div>
-
           {/* Participants and Votes */}
           <div className="mb-8 rounded-lg bg-gray-800 p-6 shadow-xl">
             <h2 className="mb-4 text-xl font-semibold">Participants ({sessionParticipants.length})</h2>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-3 gap-3 md:grid-cols-4 lg:grid-cols-6">
               {sessionParticipants.map((p) => {
                 const hasVoted = currentStory && participantVotes.has(p.id);
+                const voteValue = participantVotes.get(p.id) ?? '';
+                
+                // Card suit - assign a random suit to each participant (can be based on id)
+                const suits = ['♠', '♥', '♦', '♣'];
+                const suitIndex = p.id % suits.length;
+                const suit = suits[suitIndex];
+                
+                // Color based on suit
+                const isRedSuit = suit === '♥' || suit === '♦';
+                const suitColor = isRedSuit ? 'text-red-500' : 'text-gray-900';
+                
                 return (
-                  <div key={p.id} className={`rounded-md p-3 shadow-md ${hasVoted ? 'bg-green-700/50' : 'bg-gray-700/70'}`}>
-                    <p className="font-medium">{p.name} {p.isHost ? <span className="text-xs text-yellow-400">(Host)</span> : ''}</p>
-                    {currentStory && (
-                      <p className="text-sm">
-                        {votesRevealed
-                          ? `Voted: ${participantVotes.get(p.id) ?? 'N/A'}`
-                          : `Status: ${hasVoted ? 'Voted ✅' : 'Waiting...'}`}
-                      </p>
-                    )}
+                  <div 
+                    key={p.id} 
+                    className={`
+                      relative aspect-[2.5/3.5] 
+                      flex flex-col 
+                      rounded-lg border-2 
+                      p-1 shadow-md
+                      transform transition-all duration-300 hover:scale-105
+                      ${votesRevealed ? 'bg-white border-gray-300' : 
+                        hasVoted ? 'bg-white border-blue-500' : 'bg-white border-gray-400'}
+                    `}
+                  >
+                    {/* Card Corners - Top Left */}
+                    <div className="absolute top-1 left-1 flex flex-col items-start">
+                      {votesRevealed ? (
+                        <>
+                          <span className={`text-sm font-bold ${suitColor}`}>{voteValue || '?'}</span>
+                          <span className={`text-sm ${suitColor}`}>{suit}</span>
+                        </>
+                      ) : (
+                        <span className={`text-sm font-bold text-gray-800`}>
+                          {p.isHost ? 'H' : 'P'}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Name Badge */}
+                    <div className="mt-2 text-center">
+                      <p className="bg-gray-100 rounded px-1 text-gray-800 font-bold truncate text-xs">{p.name}</p>
+                      {p.isHost && <span className="text-[10px] text-yellow-700 font-semibold">(Host)</span>}
+                    </div>
+                    
+                    {/* Card Center - Vote Value or Decoration */}
+                    <div className="flex-grow flex items-center justify-center">
+                      {currentStory && (
+                        <>
+                          {votesRevealed ? (
+                            <div className="flex items-center justify-center">
+                              <span className={`text-3xl font-bold ${suitColor}`}>
+                                {voteValue || '?'}
+                              </span>
+                              <span className={`text-3xl ml-1 ${suitColor}`}>{suit}</span>
+                            </div>
+                          ) : (
+                            <div className={`text-center ${hasVoted ? '' : 'opacity-70'}`}>
+                              <div className="bg-gray-200 rounded-lg border border-gray-300 w-10 h-10 mx-auto flex items-center justify-center">
+                                <span className="text-xl text-gray-800 font-bold">
+                                  {hasVoted ? '?' : ''}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-[10px] text-gray-600">
+                                {hasVoted ? 'Card Ready' : 'No Card'}
+                              </p>
+                            </div>
+                          )}
+                        </>
+                      )}
+                      {!currentStory && (
+                        <div className="text-gray-500 text-center text-xs">
+                          <div className="bg-gray-100 rounded-lg w-8 h-8 mx-auto mb-1 flex items-center justify-center">
+                            <span className="text-lg">{suit}</span>
+                          </div>
+                          Waiting
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Card Corners - Bottom Right (inverted) */}
+                    <div className="absolute bottom-1 right-1 flex flex-col items-end rotate-180">
+                      {votesRevealed ? (
+                        <>
+                          <span className={`text-sm font-bold ${suitColor}`}>{voteValue || '?'}</span>
+                          <span className={`text-sm ${suitColor}`}>{suit}</span>
+                        </>
+                      ) : (
+                        <span className={`text-sm font-bold text-gray-800`}>
+                          {p.isHost ? 'H' : 'P'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -213,6 +266,74 @@ export default function SessionPage() {
             )}
           </div>
 
+                      {/* Current Story and Voting Area */}
+                      <div className="mb-8 rounded-lg bg-gray-800 p-6 shadow-xl">
+            {currentStory ? (
+              <>
+                <h2 className="text-2xl font-semibold">Current Story: {currentStory.title}</h2>
+                {currentStory.description && <p className="mt-1 text-gray-300">{currentStory.description}</p>}
+                <div className="mt-6">
+                  <h3 className="mb-3 text-lg font-medium">Place Your Bet:</h3>
+                  <div className="flex flex-wrap gap-4">
+                    {pokerValues.map((value, index) => {
+                      // Determine chip color based on value or index
+                      const chipColors = [
+                        "bg-white border-gray-300 text-gray-900", // white
+                        "bg-red-600 border-red-800 text-white",   // red
+                        "bg-blue-600 border-blue-800 text-white", // blue
+                        "bg-green-600 border-green-800 text-white", // green
+                        "bg-yellow-500 border-yellow-700 text-gray-900", // yellow
+                        "bg-purple-600 border-purple-800 text-white", // purple
+                        "bg-black border-gray-800 text-white",    // black
+                        "bg-gray-500 border-gray-700 text-white"  // gray
+                      ];
+                      const colorIndex = index % chipColors.length;
+                      
+                      return (
+                        <button
+                          key={value}
+                          onClick={() => handleCastVote(value)}
+                          disabled={castVoteMutation.isPending || votesRevealed}
+                          className={`
+                            relative rounded-full w-16 h-16 
+                            border-4 font-bold 
+                            transition-all duration-150 ease-in-out 
+                            hover:scale-110 
+                            disabled:cursor-not-allowed disabled:opacity-60
+                            ${chipColors[colorIndex]}
+                            ${selectedVote === value ? 
+                              'ring-4 ring-yellow-400 ring-opacity-70 shadow-lg transform scale-110' : ''}
+                            ${votesRevealed ? 'cursor-not-allowed opacity-60' : ''}
+                          `}
+                        >
+                          {/* Inner circle */}
+                          <div className="absolute inset-2 rounded-full border-2 border-opacity-30 flex items-center justify-center">
+                            <span className="text-2xl font-bold">{value}</span>
+                          </div>
+                          
+                          {/* Edge pattern (dots around edge) */}
+                          <div className="absolute inset-0 rounded-full">
+                            {[...Array(8)].map((_, i) => (
+                              <div 
+                                key={i} 
+                                className="absolute w-1.5 h-1.5 rounded-full bg-current opacity-60"
+                                style={{
+                                  top: `${50 - 45 * Math.sin(i * Math.PI / 4)}%`,
+                                  left: `${50 + 45 * Math.cos(i * Math.PI / 4)}%`,
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p className="text-center text-xl text-gray-400">No story selected for voting. Host can add one below.</p>
+            )}
+                      </div>
 
           {/* Host Controls: Add Story / Select Next Story */}
           {currentUser?.isHost && (
