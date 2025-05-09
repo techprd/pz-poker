@@ -18,6 +18,7 @@ export default function SessionPage() {
   const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
   const [newStoryTitle, setNewStoryTitle] = useState('');
   const [selectedVote, setSelectedVote] = useState<string | null>(null);
+  const [isFlipping, setIsFlipping] = useState(false);
 
   useEffect(() => {
     if (sessionId) {
@@ -94,7 +95,13 @@ export default function SessionPage() {
 
   const handleRevealVotes = () => {
     if (sessionId && sessionDetails?.currentStory) {
-      revealVotesMutation.mutate({ sessionId });
+      setIsFlipping(true);
+      // Add a delay before actually revealing to allow for the flip animation
+      setTimeout(() => {
+        revealVotesMutation.mutate({ sessionId });
+        // Keep flipping state for the duration of the animation
+        setTimeout(() => setIsFlipping(false), 600);
+      }, 300);
     }
   };
 
@@ -239,23 +246,30 @@ export default function SessionPage() {
               <div className="mt-6 flex gap-4">
                 <button
                   onClick={handleRevealVotes}
-                  disabled={revealVotesMutation.isPending || votesRevealed}
-                  className="rounded-md bg-green-600 px-5 py-2 font-semibold shadow-md hover:bg-green-700 disabled:opacity-50"
+                  disabled={revealVotesMutation.isPending || votesRevealed || isFlipping}
+                  className={`
+                    rounded-md px-5 py-2 font-semibold shadow-md 
+                    transition-all duration-300
+                    disabled:opacity-50
+                    ${isFlipping ? 'bg-yellow-500 text-gray-800' : 
+                      votesRevealed ? 'bg-green-600 hover:bg-green-700' : 'bg-green-600 hover:bg-green-700'}
+                  `}
                 >
-                  {votesRevealed ? 'Votes Revealed' : 'Reveal Votes'}
+                  {isFlipping ? 'Flipping...' : 
+                   votesRevealed ? 'Cards Revealed' : 'Flip Cards'}
                 </button>
                 <button
                   onClick={() => handleClearVotes()}
                   disabled={clearVotesMutation.isPending}
                   className="rounded-md bg-yellow-600 px-5 py-2 font-semibold shadow-md hover:bg-yellow-700 disabled:opacity-50"
                 >
-                  Clear Votes / New Round
+                  New Deal
                 </button>
               </div>
             )}
             {votesRevealed && currentStory && (
                 <div className="mt-4">
-                    <h3 className="text-lg font-semibold">Results:</h3>
+                    <h3 className="text-lg font-semibold">Hand Results:</h3>
                     {/* Basic result display, can be enhanced with average, consensus, etc. */}
                     <ul className="list-disc pl-5">
                     {Array.from(participantVotes.entries()).map(([participantId, voteVal]) => (
@@ -372,7 +386,7 @@ export default function SessionPage() {
                             className="rounded bg-blue-600 px-3 py-1 text-sm hover:bg-blue-700"
                             disabled={clearVotesMutation.isPending}
                         >
-                            Set as Next & Clear Votes
+                            Deal This Hand
                         </button>
                       </li>
                     ))}
