@@ -140,73 +140,96 @@ export default function SessionPage() {
               {sessionParticipants.map((p) => {
                 const hasVoted = currentStory && participantVotes.has(p.id);
                 const voteValue = participantVotes.get(p.id) ?? '';
+                
+                // Card suit - assign a random suit to each participant (can be based on id)
+                const suits = ['♠', '♥', '♦', '♣'];
+                const suitIndex = p.id % suits.length;
+                const suit = suits[suitIndex];
+                
+                // Color based on suit
+                const isRedSuit = suit === '♥' || suit === '♦';
+                const suitColor = isRedSuit ? 'text-red-500' : 'text-gray-900';
+                
                 return (
                   <div 
                     key={p.id} 
                     className={`
                       relative aspect-[2.5/3.5] 
                       flex flex-col 
-                      rounded-xl border-2 
+                      rounded-lg border-2 
                       p-1 shadow-md
                       transform transition-all duration-300 hover:scale-105
-                      ${hasVoted && !votesRevealed ? 'bg-blue-800 border-blue-500' : 'bg-red-800 border-red-400'}
-                      ${votesRevealed ? 'rotate-0' : hasVoted ? 'rotate-0' : 'rotate-0'}
+                      ${votesRevealed ? 'bg-white border-gray-300' : 
+                        hasVoted ? 'bg-white border-blue-500' : 'bg-white border-gray-400'}
                     `}
                   >
-                    {/* Card Corners */}
+                    {/* Card Corners - Top Left */}
                     <div className="absolute top-1 left-1 flex flex-col items-start">
-                      <span className="text-sm text-white font-bold">{p.isHost ? '🧟‍♂️' : '🧟'}</span>
-                    </div>
-                    <div className="absolute top-1 right-1 flex flex-col items-end">
-                      <span className="text-sm text-white font-bold">{p.isHost ? '🧟‍♂️' : '🧟'}</span>
+                      {votesRevealed ? (
+                        <>
+                          <span className={`text-sm font-bold ${suitColor}`}>{voteValue || '?'}</span>
+                          <span className={`text-sm ${suitColor}`}>{suit}</span>
+                        </>
+                      ) : (
+                        <span className={`text-sm font-bold text-gray-800`}>
+                          {p.isHost ? 'H' : 'P'}
+                        </span>
+                      )}
                     </div>
                     
-                    {/* Name */}
-                    <div className="mt-1 text-center">
-                      <p className="text-white font-bold truncate text-sm">{p.name}</p>
-                      {p.isHost && <span className="text-[10px] text-yellow-300 font-semibold">(Host)</span>}
+                    {/* Name Badge */}
+                    <div className="mt-2 text-center">
+                      <p className="bg-gray-100 rounded px-1 text-gray-800 font-bold truncate text-xs">{p.name}</p>
+                      {p.isHost && <span className="text-[10px] text-yellow-700 font-semibold">(Host)</span>}
                     </div>
                     
-                    {/* Card Center - Vote Value */}
+                    {/* Card Center - Vote Value or Decoration */}
                     <div className="flex-grow flex items-center justify-center">
                       {currentStory && (
                         <>
                           {votesRevealed ? (
-                            <div className="bg-white rounded-lg w-[70%] h-[70%] flex items-center justify-center">
-                              <span className="text-2xl font-bold text-gray-900">
-                                {voteValue || 'N/A'}
+                            <div className="flex items-center justify-center">
+                              <span className={`text-3xl font-bold ${suitColor}`}>
+                                {voteValue || '?'}
                               </span>
+                              <span className={`text-3xl ml-1 ${suitColor}`}>{suit}</span>
                             </div>
                           ) : (
                             <div className={`text-center ${hasVoted ? '' : 'opacity-70'}`}>
-                              <div className="bg-white/20 rounded-lg w-10 h-10 mx-auto flex items-center justify-center">
-                                <span className="text-xl text-white font-bold">
+                              <div className="bg-gray-200 rounded-lg border border-gray-300 w-10 h-10 mx-auto flex items-center justify-center">
+                                <span className="text-xl text-gray-800 font-bold">
                                   {hasVoted ? '?' : ''}
                                 </span>
                               </div>
-                              <p className="mt-1 text-[10px] text-white">
-                                {hasVoted ? 'Voted' : 'Waiting...'}
+                              <p className="mt-1 text-[10px] text-gray-600">
+                                {hasVoted ? 'Card Ready' : 'No Card'}
                               </p>
                             </div>
                           )}
                         </>
                       )}
                       {!currentStory && (
-                        <div className="text-white/50 text-center text-xs">
-                          <div className="bg-white/10 rounded-lg w-8 h-8 mx-auto mb-1 flex items-center justify-center">
-                            <span className="text-lg">♠</span>
+                        <div className="text-gray-500 text-center text-xs">
+                          <div className="bg-gray-100 rounded-lg w-8 h-8 mx-auto mb-1 flex items-center justify-center">
+                            <span className="text-lg">{suit}</span>
                           </div>
                           Waiting
                         </div>
                       )}
                     </div>
                     
-                    {/* Card Corners (Bottom) */}
-                    <div className="absolute bottom-1 left-1 flex flex-col items-start rotate-180">
-                      <span className="text-sm text-white font-bold">{p.isHost ? '🧟‍♂️' : '🧟'}</span>
-                    </div>
+                    {/* Card Corners - Bottom Right (inverted) */}
                     <div className="absolute bottom-1 right-1 flex flex-col items-end rotate-180">
-                      <span className="text-sm text-white font-bold">{p.isHost ? '🧟‍♂️' : '🧟'}</span>
+                      {votesRevealed ? (
+                        <>
+                          <span className={`text-sm font-bold ${suitColor}`}>{voteValue || '?'}</span>
+                          <span className={`text-sm ${suitColor}`}>{suit}</span>
+                        </>
+                      ) : (
+                        <span className={`text-sm font-bold text-gray-800`}>
+                          {p.isHost ? 'H' : 'P'}
+                        </span>
+                      )}
                     </div>
                   </div>
                 );
