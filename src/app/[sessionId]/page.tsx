@@ -42,11 +42,7 @@ export default function SessionPage() {
     { sessionId },
     {
       enabled: !!sessionId && !!currentUser,
-      refetchInterval: 5000,
-      onError: (error) => {
-        alert(`Error fetching session: ${error.message}`);
-        router.push('/');
-      }
+      refetchInterval: 5000
     }
   );
 
@@ -93,52 +89,49 @@ export default function SessionPage() {
       
       // Find the current user's card in the DOM
       const userCards = document.querySelectorAll('[data-participant-id]');
-      let userCardElement: Element | null = null;
       
       userCards.forEach(card => {
         if (card.getAttribute('data-participant-id') === currentUser.id.toString()) {
-          userCardElement = card;
+          if (card) {
+            const cardRect = card.getBoundingClientRect();
+            const cardCenterX = cardRect.left + cardRect.width / 2;
+            const cardCenterY = cardRect.top + cardRect.height / 2;
+            
+            // Set flying number and its positions
+            setFlyingNumber({
+              value: voteValue,
+              color: chipColor.includes('text-white') ? 'text-white' : 'text-gray-900',
+              active: true
+            });
+            
+            setFlyingNumberPosition({
+              startX: chipCenterX,
+              startY: chipCenterY,
+              endX: cardCenterX,
+              endY: cardCenterY
+            });
+            
+            // After animation, set the selected vote and send to server
+            setTimeout(() => {
+              setFlyingNumber(prev => ({...prev, active: false}));
+              setSelectedVote(voteValue);
+              castVoteMutation.mutate({
+                sessionId,
+                participantId: currentUser.id,
+                voteValue,
+              });
+            }, 1000); // Match this with the animation duration
+          } else {
+            // Fallback if we can't find the user's card element
+            setSelectedVote(voteValue);
+            castVoteMutation.mutate({
+              sessionId,
+              participantId: currentUser.id,
+              voteValue,
+            });
+          }
         }
-      });
-      
-      if (userCardElement) {
-        const cardRect = userCardElement.getBoundingClientRect();
-        const cardCenterX = cardRect.left + cardRect.width / 2;
-        const cardCenterY = cardRect.top + cardRect.height / 2;
-        
-        // Set flying number and its positions
-        setFlyingNumber({
-          value: voteValue,
-          color: chipColor.includes('text-white') ? 'text-white' : 'text-gray-900',
-          active: true
-        });
-        
-        setFlyingNumberPosition({
-          startX: chipCenterX,
-          startY: chipCenterY,
-          endX: cardCenterX,
-          endY: cardCenterY
-        });
-        
-        // After animation, set the selected vote and send to server
-        setTimeout(() => {
-          setFlyingNumber(prev => ({...prev, active: false}));
-          setSelectedVote(voteValue);
-          castVoteMutation.mutate({
-            sessionId,
-            participantId: currentUser.id,
-            voteValue,
-          });
-        }, 1000); // Match this with the animation duration
-      } else {
-        // Fallback if we can't find the user's card element
-        setSelectedVote(voteValue);
-        castVoteMutation.mutate({
-          sessionId,
-          participantId: currentUser.id,
-          voteValue,
-        });
-      }
+      })
     }
   };
 
@@ -472,7 +465,7 @@ export default function SessionPage() {
                       return (
                         <button
                           key={value}
-                          onClick={(e) => handleCastVote(value, chipColors[colorIndex], e)}
+                          onClick={(e) => handleCastVote(value, chipColors[colorIndex] ?? "", e)}
                           disabled={castVoteMutation.isPending || votesRevealed}
                           className={`
                             relative rounded-full w-16 h-16 
