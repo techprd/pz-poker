@@ -1,33 +1,3 @@
-//// Example model schema from the Drizzle docs
-//// https://orm.drizzle.team/docs/sql-schema-declaration
-//
-//import { sql } from "drizzle-orm";
-//import { index, pgTableCreator } from "drizzle-orm/pg-core";
-//
-///**
-// * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
-// * database instance for multiple projects.
-// *
-// * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
-// */
-//export const createTable = pgTableCreator((name) => `pz-poker_${name}`);
-//
-//export const posts = createTable(
-//  "post",
-//  (d) => ({
-//    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-//    name: d.varchar({ length: 256 }),
-//    createdAt: d
-//      .timestamp({ withTimezone: true })
-//      .default(sql`CURRENT_TIMESTAMP`)
-//      .notNull(),
-//    updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
-//  }),
-//  (t) => [index("name_idx").on(t.name)],
-//);
-
-//export const createTable = pgTableCreator((name) => `pz-poker_${name}`)
-
 import {
   pgTable,
   varchar,
@@ -36,13 +6,12 @@ import {
   serial,
   integer,
   boolean,
-  primaryKey, // Keep this import if used elsewhere, but we'll use unique for the constraint
+  primaryKey,
   index,
-  unique, // <-- Add this import
+  unique,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
-// Poker Sessions (Rooms) - (Assuming this is correct as per your snippet)
 export const sessions = pgTable(
   'sessions',
   {
@@ -59,11 +28,10 @@ export const sessions = pgTable(
   }
 );
 
-// Corrected Participants in a Session
 export const participants = pgTable(
   'participants',
   {
-    id: serial('id').primaryKey(), // This is the primary key
+    id: serial('id').primaryKey(),
     sessionId: varchar('session_id', { length: 12 })
       .notNull()
       .references(() => sessions.id, { onDelete: 'cascade' }),
@@ -76,14 +44,11 @@ export const participants = pgTable(
     return {
       sessionIdx: index('participant_session_idx').on(table.sessionId),
       userIdx: index('participant_user_idx').on(table.userId),
-      // Changed from primaryKey to unique constraint
-      uniqueUserInSession: unique('unique_user_in_session_uq') // Drizzle typically names unique constraints with _uq
-        .on(table.sessionId, table.userId),
+      uniqueUserInSession: unique('unique_user_in_session_uq').on(table.sessionId, table.userId),
     };
   }
 );
 
-// Stories/Tasks to be estimated - (Assuming this is correct)
 export const stories = pgTable(
   'stories',
   {
@@ -103,12 +68,10 @@ export const stories = pgTable(
   }
 );
 
-
-// Corrected Votes
 export const votes = pgTable(
   'votes',
   {
-    id: serial('id').primaryKey(), // This is the primary key
+    id: serial('id').primaryKey(),
     storyId: integer('story_id')
       .notNull()
       .references(() => stories.id, { onDelete: 'cascade' }),
@@ -122,14 +85,31 @@ export const votes = pgTable(
     return {
       storyIdx: index('vote_story_idx').on(table.storyId),
       participantIdx: index('vote_participant_idx').on(table.participantId),
-      // Changed from primaryKey to unique constraint
-      uniqueVote: unique('unique_vote_uq') // Drizzle typically names unique constraints with _uq
-        .on(table.storyId, table.participantId),
+      uniqueVote: unique('unique_vote_uq').on(table.storyId, table.participantId),
     };
   }
 );
 
-// --- RELATIONS --- (Assuming these are correct as per your snippet)
+export const bets = pgTable(
+  'bets',
+  {
+    id: serial('id').primaryKey(),
+    storyId: integer('story_id')
+      .notNull()
+      .references(() => stories.id, { onDelete: 'cascade' }),
+    participantId: integer('participant_id')
+      .notNull()
+      .references(() => participants.id, { onDelete: 'cascade' }),
+    betValue: varchar('bet_value', { length: 50 }).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => {
+    return {
+      uniqueBet: unique('unique_bet_uq').on(table.storyId, table.participantId),
+    };
+  }
+);
+
 export const sessionsRelations = relations(sessions, ({ many, one }) => ({
   participants: many(participants),
   stories: many(stories),
@@ -145,6 +125,7 @@ export const participantsRelations = relations(participants, ({ one, many }) => 
     references: [sessions.id],
   }),
   votes: many(votes),
+  bets: many(bets),
 }));
 
 export const storiesRelations = relations(stories, ({ one, many }) => ({
@@ -153,6 +134,7 @@ export const storiesRelations = relations(stories, ({ one, many }) => ({
     references: [sessions.id],
   }),
   votes: many(votes),
+  bets: many(bets),
 }));
 
 export const votesRelations = relations(votes, ({ one }) => ({
@@ -162,6 +144,17 @@ export const votesRelations = relations(votes, ({ one }) => ({
   }),
   participant: one(participants, {
     fields: [votes.participantId],
+    references: [participants.id],
+  }),
+}));
+
+export const betsRelations = relations(bets, ({ one }) => ({
+  story: one(stories, {
+    fields: [bets.storyId],
+    references: [stories.id],
+  }),
+  participant: one(participants, {
+    fields: [bets.participantId],
     references: [participants.id],
   }),
 }));
