@@ -19,6 +19,8 @@ export default function SessionPage() {
   const [newStoryTitle, setNewStoryTitle] = useState('');
   const [selectedVote, setSelectedVote] = useState<string | null>(null);
   const [isFlipping, setIsFlipping] = useState(false);
+  const [flyingNumber, setFlyingNumber] = useState<{value: string, color: string, active: boolean}>({value: "", color: "", active: false});
+  const [flyingNumberPosition, setFlyingNumberPosition] = useState({startX: 0, startY: 0, endX: 0, endY: 0});
 
   useEffect(() => {
     if (sessionId) {
@@ -82,14 +84,61 @@ export default function SessionPage() {
     }
   };
 
-  const handleCastVote = (voteValue: string) => {
+  const handleCastVote = (voteValue: string, chipColor: string, event: React.MouseEvent) => {
     if (sessionId && currentUser && sessionDetails?.currentStory) {
-      setSelectedVote(voteValue);
-      castVoteMutation.mutate({
-        sessionId,
-        participantId: currentUser.id,
-        voteValue,
+      // Get the position of the clicked chip
+      const chipRect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+      const chipCenterX = chipRect.left + chipRect.width / 2;
+      const chipCenterY = chipRect.top + chipRect.height / 2;
+      
+      // Find the current user's card in the DOM
+      const userCards = document.querySelectorAll('[data-participant-id]');
+      let userCardElement: Element | null = null;
+      
+      userCards.forEach(card => {
+        if (card.getAttribute('data-participant-id') === currentUser.id.toString()) {
+          userCardElement = card;
+        }
       });
+      
+      if (userCardElement) {
+        const cardRect = userCardElement.getBoundingClientRect();
+        const cardCenterX = cardRect.left + cardRect.width / 2;
+        const cardCenterY = cardRect.top + cardRect.height / 2;
+        
+        // Set flying number and its positions
+        setFlyingNumber({
+          value: voteValue,
+          color: chipColor.includes('text-white') ? 'text-white' : 'text-gray-900',
+          active: true
+        });
+        
+        setFlyingNumberPosition({
+          startX: chipCenterX,
+          startY: chipCenterY,
+          endX: cardCenterX,
+          endY: cardCenterY
+        });
+        
+        // After animation, set the selected vote and send to server
+        setTimeout(() => {
+          setFlyingNumber(prev => ({...prev, active: false}));
+          setSelectedVote(voteValue);
+          castVoteMutation.mutate({
+            sessionId,
+            participantId: currentUser.id,
+            voteValue,
+          });
+        }, 1000); // Match this with the animation duration
+      } else {
+        // Fallback if we can't find the user's card element
+        setSelectedVote(voteValue);
+        castVoteMutation.mutate({
+          sessionId,
+          participantId: currentUser.id,
+          voteValue,
+        });
+      }
     }
   };
 
@@ -139,7 +188,47 @@ export default function SessionPage() {
       <Head>
         <title>Poker Session: {sessionName}</title>
       </Head>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes fly-to-card {
+          0% {
+            opacity: 1;
+            transform: translate(0, 0) scale(1);
+          }
+          80% {
+            opacity: 0.9;
+            transform: translate(
+              calc(${flyingNumberPosition.endX - flyingNumberPosition.startX}px),
+              calc(${flyingNumberPosition.endY - flyingNumberPosition.startY}px)
+            ) scale(0.7);
+          }
+          100% {
+            opacity: 0;
+            transform: translate(
+              calc(${flyingNumberPosition.endX - flyingNumberPosition.startX}px),
+              calc(${flyingNumberPosition.endY - flyingNumberPosition.startY}px)
+            ) scale(0);
+          }
+        }
+        
+        .flying-number {
+          position: fixed;
+          z-index: 100;
+          pointer-events: none;
+          left: ${flyingNumberPosition.startX}px;
+          top: ${flyingNumberPosition.startY}px;
+          font-weight: bold;
+          font-size: 24px;
+          animation: fly-to-card 1s cubic-bezier(0.215, 0.610, 0.355, 1);
+          transform-origin: center center;
+        }
+      ` }} />
       <main className="min-h-screen bg-gray-900 p-4 text-white md:p-8">
+        {/* Flying number animation */}
+        {flyingNumber.active && (
+          <div className={`flying-number ${flyingNumber.color}`}>
+            {flyingNumber.value}
+          </div>
+        )}
         <div className="container mx-auto max-w-5xl">
           <button onClick={() => router.push('/')} className="mb-4 rounded bg-blue-600 px-3 py-1 text-sm hover:bg-blue-700">
             &larr; Back to Home
@@ -169,6 +258,7 @@ export default function SessionPage() {
                     key={p.id} 
                     className="relative aspect-[2.5/3.5] w-full"
                     style={{ perspective: "1000px" }}
+                    data-participant-id={p.id}
                   >
                     {/* Card Flip Container */}
                     <div 
@@ -194,6 +284,14 @@ export default function SessionPage() {
                           background: `linear-gradient(135deg, #334155, #1e293b)` // dark blue gradient
                         }}
                       >
+                        {/* Only show the user's own vote on their card */}
+                        {currentUser && p.id === currentUser.id && hasVoted && !votesRevealed && (
+                          <div className="absolute top-3 right-3 flex items-center justify-center">
+                            <div className="bg-blue-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg opacity-90 z-10">
+                              {voteValue}
+                            </div>
+                          </div>
+                        )}
                         {/* Card Back Design */}
                         <div className="h-full w-full relative">
                           {/* Diagonal Pattern */}
@@ -222,10 +320,24 @@ export default function SessionPage() {
                           {/* Voted Status */}
                           {hasVoted && (
                             <div className="absolute bottom-3 inset-x-0 flex justify-center">
-                              <span className="px-2 py-0.5 bg-blue-500 rounded-full text-white text-xs font-medium">
+                              <span className={`
+                                px-2 py-0.5 bg-blue-500 rounded-full text-white text-xs font-medium
+                                ${currentUser && p.id === currentUser.id && selectedVote === voteValue ? 'animate-pulse' : ''}
+                              `}>
                                 Voted
                               </span>
                             </div>
+                          )}
+                          
+                          {/* Vote received effect for current user */}
+                          {currentUser && p.id === currentUser.id && selectedVote === voteValue && (
+                            <div className="absolute inset-0 rounded-lg animate-ping" 
+                              style={{
+                                animation: "ping 1s cubic-bezier(0, 0, 0.2, 1) 1",
+                                border: "2px solid #3b82f6",
+                                opacity: 0
+                              }}
+                            />
                           )}
                           
                           {/* Decoration */}
@@ -360,7 +472,7 @@ export default function SessionPage() {
                       return (
                         <button
                           key={value}
-                          onClick={() => handleCastVote(value)}
+                          onClick={(e) => handleCastVote(value, chipColors[colorIndex], e)}
                           disabled={castVoteMutation.isPending || votesRevealed}
                           className={`
                             relative rounded-full w-16 h-16 
@@ -376,7 +488,11 @@ export default function SessionPage() {
                         >
                           {/* Inner circle */}
                           <div className="absolute inset-2 rounded-full border-2 border-opacity-30 flex items-center justify-center">
-                            <span className="text-2xl font-bold">{value}</span>
+                            <span className="text-2xl font-bold relative group-hover:animate-pulse">{value}</span>
+                            {/* Add click effect */}
+                            {selectedVote === value && (
+                              <span className="absolute inset-0 rounded-full bg-current opacity-10 animate-ping"></span>
+                            )}
                           </div>
                           
                           {/* Edge pattern (dots around edge) */}
