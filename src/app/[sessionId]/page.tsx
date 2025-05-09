@@ -213,12 +213,13 @@ export default function SessionPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white">Session not found or error loading.</div>
   );
 
-  const { name: sessionName, participants: sessionParticipants, stories: sessionStories, currentStory, votes: currentVotesTyped, votesRevealed, pokerValues } = sessionDetails;
+  const { name: sessionName, participants: sessionParticipants, stories: sessionStories, currentStory, votes: currentVotesTyped, votesRevealed, pokerValues, bets: currentBets } = sessionDetails;
   const currentVotes = currentVotesTyped as VoteEntry[] | undefined; // Type assertion
 
   const participantMap = new Map(sessionParticipants.map(p => [p.id, p]));
   // This map will store the full vote entry, including betAmount
   const participantEntries = new Map(currentVotes?.map(v => [v.participantId, v]));
+  const participantBetEntries = new Map(currentBets?.map(v => [v.participantId, v]));
 
 
   return (
@@ -354,8 +355,8 @@ export default function SessionPage() {
                 <ul className="list-disc pl-5">
                   {Array.from(participantEntries.entries()).map(([participantId, entry]) => (
                     <li key={participantId}>
-                      {participantMap.get(participantId)?.name}: Vote {entry.voteValue}
-                      {entry.betAmount !== undefined && entry.betAmount !== null ? `, Bet: ${entry.betAmount}` : ', No bet'}
+                      {participantMap.get(participantId)?.name}: Vote {entry.voteValue}, Bet: {participantBetEntries.get(participantId)?.betValue ?? "No bet"}
+                      {/* {participantBetEntries.get(participantId)?.betValue}: {entry.betValue !== undefined && entry.betValue !== null ? `, Bet: ${entry.betValue}` : ', No bet'} */}
                     </li>
                   ))}
                 </ul>
