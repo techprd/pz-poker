@@ -136,7 +136,7 @@ export default function SessionPage() {
           {/* Participants and Votes */}
           <div className="mb-8 rounded-lg bg-gray-800 p-6 shadow-xl">
             <h2 className="mb-4 text-xl font-semibold">Participants ({sessionParticipants.length})</h2>
-            <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-3 gap-3 md:grid-cols-4 lg:grid-cols-6">
               {sessionParticipants.map((p) => {
                 const hasVoted = currentStory && participantVotes.has(p.id);
                 const voteValue = participantVotes.get(p.id) ?? '';
@@ -146,8 +146,8 @@ export default function SessionPage() {
                     className={`
                       relative aspect-[2.5/3.5] 
                       flex flex-col 
-                      rounded-xl border-4 
-                      p-2 shadow-lg
+                      rounded-xl border-2 
+                      p-1 shadow-md
                       transform transition-all duration-300 hover:scale-105
                       ${hasVoted && !votesRevealed ? 'bg-blue-800 border-blue-500' : 'bg-red-800 border-red-400'}
                       ${votesRevealed ? 'rotate-0' : hasVoted ? 'rotate-0' : 'rotate-0'}
@@ -155,16 +155,16 @@ export default function SessionPage() {
                   >
                     {/* Card Corners */}
                     <div className="absolute top-1 left-1 flex flex-col items-start">
-                      <span className="text-sm text-white font-bold">{p.isHost ? '♛' : '♟'}</span>
+                      <span className="text-sm text-white font-bold">{p.isHost ? '🧟‍♂️' : '🧟'}</span>
                     </div>
                     <div className="absolute top-1 right-1 flex flex-col items-end">
-                      <span className="text-sm text-white font-bold">{p.isHost ? '♛' : '♟'}</span>
+                      <span className="text-sm text-white font-bold">{p.isHost ? '🧟‍♂️' : '🧟'}</span>
                     </div>
                     
                     {/* Name */}
-                    <div className="mt-2 text-center">
-                      <p className="text-white font-bold truncate text-lg">{p.name}</p>
-                      {p.isHost && <span className="text-xs text-yellow-300 font-semibold">(Host)</span>}
+                    <div className="mt-1 text-center">
+                      <p className="text-white font-bold truncate text-sm">{p.name}</p>
+                      {p.isHost && <span className="text-[10px] text-yellow-300 font-semibold">(Host)</span>}
                     </div>
                     
                     {/* Card Center - Vote Value */}
@@ -173,18 +173,18 @@ export default function SessionPage() {
                         <>
                           {votesRevealed ? (
                             <div className="bg-white rounded-lg w-[70%] h-[70%] flex items-center justify-center">
-                              <span className="text-4xl font-bold text-gray-900">
+                              <span className="text-2xl font-bold text-gray-900">
                                 {voteValue || 'N/A'}
                               </span>
                             </div>
                           ) : (
                             <div className={`text-center ${hasVoted ? '' : 'opacity-70'}`}>
-                              <div className="bg-white/20 rounded-lg w-16 h-16 mx-auto flex items-center justify-center">
-                                <span className="text-2xl text-white font-bold">
+                              <div className="bg-white/20 rounded-lg w-10 h-10 mx-auto flex items-center justify-center">
+                                <span className="text-xl text-white font-bold">
                                   {hasVoted ? '?' : ''}
                                 </span>
                               </div>
-                              <p className="mt-1 text-xs text-white">
+                              <p className="mt-1 text-[10px] text-white">
                                 {hasVoted ? 'Voted' : 'Waiting...'}
                               </p>
                             </div>
@@ -192,21 +192,21 @@ export default function SessionPage() {
                         </>
                       )}
                       {!currentStory && (
-                        <div className="text-white/50 text-center text-sm">
-                          <div className="bg-white/10 rounded-lg w-12 h-12 mx-auto mb-1 flex items-center justify-center">
-                            <span className="text-2xl">♠</span>
+                        <div className="text-white/50 text-center text-xs">
+                          <div className="bg-white/10 rounded-lg w-8 h-8 mx-auto mb-1 flex items-center justify-center">
+                            <span className="text-lg">♠</span>
                           </div>
-                          Waiting for story
+                          Waiting
                         </div>
                       )}
                     </div>
                     
                     {/* Card Corners (Bottom) */}
                     <div className="absolute bottom-1 left-1 flex flex-col items-start rotate-180">
-                      <span className="text-sm text-white font-bold">{p.isHost ? '♛' : '♟'}</span>
+                      <span className="text-sm text-white font-bold">{p.isHost ? '🧟‍♂️' : '🧟'}</span>
                     </div>
                     <div className="absolute bottom-1 right-1 flex flex-col items-end rotate-180">
-                      <span className="text-sm text-white font-bold">{p.isHost ? '♛' : '♟'}</span>
+                      <span className="text-sm text-white font-bold">{p.isHost ? '🧟‍♂️' : '🧟'}</span>
                     </div>
                   </div>
                 );
@@ -250,20 +250,60 @@ export default function SessionPage() {
                 <h2 className="text-2xl font-semibold">Current Story: {currentStory.title}</h2>
                 {currentStory.description && <p className="mt-1 text-gray-300">{currentStory.description}</p>}
                 <div className="mt-6">
-                  <h3 className="mb-3 text-lg font-medium">Cast Your Vote:</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {pokerValues.map((value) => (
-                      <button
-                        key={value}
-                        onClick={() => handleCastVote(value)}
-                        disabled={castVoteMutation.isPending || votesRevealed}
-                        className={`rounded-lg border-2 px-4 py-3 font-bold transition-all duration-150 ease-in-out hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60
-                                      ${selectedVote === value ? 'border-purple-500 bg-purple-600 text-white ring-2 ring-purple-400' : 'border-gray-600 bg-gray-700 hover:bg-gray-600'}
-                                      ${votesRevealed ? 'cursor-not-allowed opacity-60' : ''}`}
-                      >
-                        {value}
-                      </button>
-                    ))}
+                  <h3 className="mb-3 text-lg font-medium">Place Your Bet:</h3>
+                  <div className="flex flex-wrap gap-4">
+                    {pokerValues.map((value, index) => {
+                      // Determine chip color based on value or index
+                      const chipColors = [
+                        "bg-white border-gray-300 text-gray-900", // white
+                        "bg-red-600 border-red-800 text-white",   // red
+                        "bg-blue-600 border-blue-800 text-white", // blue
+                        "bg-green-600 border-green-800 text-white", // green
+                        "bg-yellow-500 border-yellow-700 text-gray-900", // yellow
+                        "bg-purple-600 border-purple-800 text-white", // purple
+                        "bg-black border-gray-800 text-white",    // black
+                        "bg-gray-500 border-gray-700 text-white"  // gray
+                      ];
+                      const colorIndex = index % chipColors.length;
+                      
+                      return (
+                        <button
+                          key={value}
+                          onClick={() => handleCastVote(value)}
+                          disabled={castVoteMutation.isPending || votesRevealed}
+                          className={`
+                            relative rounded-full w-16 h-16 
+                            border-4 font-bold 
+                            transition-all duration-150 ease-in-out 
+                            hover:scale-110 
+                            disabled:cursor-not-allowed disabled:opacity-60
+                            ${chipColors[colorIndex]}
+                            ${selectedVote === value ? 
+                              'ring-4 ring-yellow-400 ring-opacity-70 shadow-lg transform scale-110' : ''}
+                            ${votesRevealed ? 'cursor-not-allowed opacity-60' : ''}
+                          `}
+                        >
+                          {/* Inner circle */}
+                          <div className="absolute inset-2 rounded-full border-2 border-opacity-30 flex items-center justify-center">
+                            <span className="text-2xl font-bold">{value}</span>
+                          </div>
+                          
+                          {/* Edge pattern (dots around edge) */}
+                          <div className="absolute inset-0 rounded-full">
+                            {[...Array(8)].map((_, i) => (
+                              <div 
+                                key={i} 
+                                className="absolute w-1.5 h-1.5 rounded-full bg-current opacity-60"
+                                style={{
+                                  top: `${50 - 45 * Math.sin(i * Math.PI / 4)}%`,
+                                  left: `${50 + 45 * Math.cos(i * Math.PI / 4)}%`,
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </>
