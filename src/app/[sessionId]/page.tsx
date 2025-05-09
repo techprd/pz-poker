@@ -73,7 +73,7 @@ export default function SessionPage() {
     { sessionId },
     {
       enabled: !!sessionId && !!currentUser,
-      refetchInterval: 5000,
+      refetchInterval: 1000,
       // onSuccess: (data) => { // For debugging received data structure
       //   console.log("Session Details:", data);
       // }
