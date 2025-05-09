@@ -50,9 +50,7 @@ export const pokerRouter = createTRPCRouter({
       storyId: z.number(), // ID of the story the bet is for
       participantId: z.number(), // ID of the participant placing the bet
       // Bet value must be a string and one of the predefined POKER_VALUES
-      betValue: z.string().refine(val => POKER_VALUES.includes(val) || !isNaN(parseFloat(val)), {
-        message: "Invalid bet value. Must be one of the poker values or a number.",
-      }),
+      betValue: z.string(),
     }))
     .mutation(async ({ input }) => {
       // Retrieve the story to ensure it exists and is active

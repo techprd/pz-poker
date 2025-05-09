@@ -163,18 +163,12 @@ export default function SessionPage() {
           setSelectedVote(voteValue);
           castVoteMutation.mutate({ sessionId, participantId: currentUser.id, voteValue });
 
-          if (betValue.trim() !== '') {
-            const numericBetAmount = parseFloat(betValue);
-            if (!isNaN(numericBetAmount) && sessionDetails.currentStory?.id) {
-              betMutation.mutate({
-                sessionId,
-                participantId: currentUser.id,
-                storyId: sessionDetails.currentStory.id, // Ensure currentStory and its ID are available
-                amount: numericBetAmount,
-              });
-            } else if (isNaN(numericBetAmount)) {
-                alert("Bet amount must be a valid number.");
-            }
+          if (betValue.trim() !== '' && sessionDetails.currentStory?.id) {
+            betMutation.mutate({
+              participantId: currentUser.id,
+              storyId: sessionDetails.currentStory.id,
+              betValue,
+            });
           }
         }, 1000);
       } else {
@@ -182,15 +176,11 @@ export default function SessionPage() {
         setSelectedVote(voteValue);
         castVoteMutation.mutate({ sessionId, participantId: currentUser.id, voteValue });
         if (betValue.trim() !== '' && sessionDetails.currentStory?.id) {
-          const numericBetAmount = parseFloat(betValue);
-          if (!isNaN(numericBetAmount)) {
             betMutation.mutate({
-              sessionId,
               participantId: currentUser.id,
               storyId: sessionDetails.currentStory.id,
-              amount: numericBetAmount,
+              betValue,
             });
-          }
         }
       }
     }
