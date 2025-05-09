@@ -165,19 +165,78 @@ export default function SessionPage() {
           {/* Participants and Votes */}
           <div className="mb-8 rounded-lg bg-gray-800 p-6 shadow-xl">
             <h2 className="mb-4 text-xl font-semibold">Participants ({sessionParticipants.length})</h2>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
               {sessionParticipants.map((p) => {
                 const hasVoted = currentStory && participantVotes.has(p.id);
+                const voteValue = participantVotes.get(p.id) ?? '';
                 return (
-                  <div key={p.id} className={`rounded-md p-3 shadow-md ${hasVoted ? 'bg-green-700/50' : 'bg-gray-700/70'}`}>
-                    <p className="font-medium">{p.name} {p.isHost ? <span className="text-xs text-yellow-400">(Host)</span> : ''}</p>
-                    {currentStory && (
-                      <p className="text-sm">
-                        {votesRevealed
-                          ? `Voted: ${participantVotes.get(p.id) ?? 'N/A'}`
-                          : `Status: ${hasVoted ? 'Voted ✅' : 'Waiting...'}`}
-                      </p>
-                    )}
+                  <div 
+                    key={p.id} 
+                    className={`
+                      relative aspect-[2.5/3.5] 
+                      flex flex-col 
+                      rounded-xl border-4 
+                      p-2 shadow-lg
+                      transform transition-all duration-300 hover:scale-105
+                      ${hasVoted && !votesRevealed ? 'bg-blue-800 border-blue-500' : 'bg-red-800 border-red-400'}
+                      ${votesRevealed ? 'rotate-0' : hasVoted ? 'rotate-0' : 'rotate-0'}
+                    `}
+                  >
+                    {/* Card Corners */}
+                    <div className="absolute top-1 left-1 flex flex-col items-start">
+                      <span className="text-sm text-white font-bold">{p.isHost ? '♛' : '♟'}</span>
+                    </div>
+                    <div className="absolute top-1 right-1 flex flex-col items-end">
+                      <span className="text-sm text-white font-bold">{p.isHost ? '♛' : '♟'}</span>
+                    </div>
+                    
+                    {/* Name */}
+                    <div className="mt-2 text-center">
+                      <p className="text-white font-bold truncate text-lg">{p.name}</p>
+                      {p.isHost && <span className="text-xs text-yellow-300 font-semibold">(Host)</span>}
+                    </div>
+                    
+                    {/* Card Center - Vote Value */}
+                    <div className="flex-grow flex items-center justify-center">
+                      {currentStory && (
+                        <>
+                          {votesRevealed ? (
+                            <div className="bg-white rounded-lg w-[70%] h-[70%] flex items-center justify-center">
+                              <span className="text-4xl font-bold text-gray-900">
+                                {voteValue || 'N/A'}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className={`text-center ${hasVoted ? '' : 'opacity-70'}`}>
+                              <div className="bg-white/20 rounded-lg w-16 h-16 mx-auto flex items-center justify-center">
+                                <span className="text-2xl text-white font-bold">
+                                  {hasVoted ? '?' : ''}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-xs text-white">
+                                {hasVoted ? 'Voted' : 'Waiting...'}
+                              </p>
+                            </div>
+                          )}
+                        </>
+                      )}
+                      {!currentStory && (
+                        <div className="text-white/50 text-center text-sm">
+                          <div className="bg-white/10 rounded-lg w-12 h-12 mx-auto mb-1 flex items-center justify-center">
+                            <span className="text-2xl">♠</span>
+                          </div>
+                          Waiting for story
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Card Corners (Bottom) */}
+                    <div className="absolute bottom-1 left-1 flex flex-col items-start rotate-180">
+                      <span className="text-sm text-white font-bold">{p.isHost ? '♛' : '♟'}</span>
+                    </div>
+                    <div className="absolute bottom-1 right-1 flex flex-col items-end rotate-180">
+                      <span className="text-sm text-white font-bold">{p.isHost ? '♛' : '♟'}</span>
+                    </div>
                   </div>
                 );
               })}
