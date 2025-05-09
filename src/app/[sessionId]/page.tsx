@@ -95,13 +95,20 @@ export default function SessionPage() {
 
   const handleRevealVotes = () => {
     if (sessionId && sessionDetails?.currentStory) {
+      // Start the flip animation sequence
       setIsFlipping(true);
-      // Add a delay before actually revealing to allow for the flip animation
+      
+      // Wait for cards to visibly flip halfway before revealing data
       setTimeout(() => {
+        // Call API to reveal votes data
         revealVotesMutation.mutate({ sessionId });
-        // Keep flipping state for the duration of the animation
-        setTimeout(() => setIsFlipping(false), 600);
-      }, 300);
+        
+        // Keep the flipping state active until animation completes
+        // Using a longer time to account for the staggered delays
+        setTimeout(() => {
+          setIsFlipping(false);
+        }, 1500);
+      }, 800);
     }
   };
 
@@ -160,83 +167,113 @@ export default function SessionPage() {
                 return (
                   <div 
                     key={p.id} 
-                    className={`
-                      relative aspect-[2.5/3.5] 
-                      flex flex-col 
-                      rounded-lg border-2 
-                      p-1 shadow-md
-                      transform transition-all duration-300 hover:scale-105
-                      ${votesRevealed ? 'bg-white border-gray-300' : 
-                        hasVoted ? 'bg-white border-blue-500' : 'bg-white border-gray-400'}
-                    `}
+                    className="relative aspect-[2.5/3.5] w-full"
+                    style={{ perspective: "1000px" }}
                   >
-                    {/* Card Corners - Top Left */}
-                    <div className="absolute top-1 left-1 flex flex-col items-start">
-                      {votesRevealed ? (
-                        <>
-                          <span className={`text-sm font-bold ${suitColor}`}>{voteValue || '?'}</span>
-                          <span className={`text-sm ${suitColor}`}>{suit}</span>
-                        </>
-                      ) : (
-                        <span className={`text-sm font-bold text-gray-800`}>
-                          {p.isHost ? 'H' : 'P'}
-                        </span>
-                      )}
-                    </div>
-                    
-                    {/* Name Badge */}
-                    <div className="mt-2 text-center">
-                      <p className="bg-gray-100 rounded px-1 text-gray-800 font-bold truncate text-xs">{p.name}</p>
-                      {p.isHost && <span className="text-[10px] text-yellow-700 font-semibold">(Host)</span>}
-                    </div>
-                    
-                    {/* Card Center - Vote Value or Decoration */}
-                    <div className="flex-grow flex items-center justify-center">
-                      {currentStory && (
-                        <>
-                          {votesRevealed ? (
-                            <div className="flex items-center justify-center">
-                              <span className={`text-3xl font-bold ${suitColor}`}>
-                                {voteValue || '?'}
-                              </span>
-                              <span className={`text-3xl ml-1 ${suitColor}`}>{suit}</span>
+                    {/* Card Flip Container */}
+                    <div 
+                      className={`
+                        relative w-full h-full 
+                        transition-all duration-1000 ease-in-out
+                        hover:scale-105
+                      `}
+                      style={{ 
+                        transformStyle: "preserve-3d",
+                        transform: votesRevealed || isFlipping ? "rotateY(180deg)" : "",
+                        transitionDelay: isFlipping ? `${p.id % 5 * 0.15}s` : "0s"
+                      }}
+                    >
+                      {/* Card Back (hidden when flipped) */}
+                      <div 
+                        className="absolute w-full h-full backface-hidden rounded-lg shadow-md"
+                        style={{ 
+                          backfaceVisibility: "hidden",
+                          borderWidth: "2px",
+                          borderStyle: "solid",
+                          borderColor: hasVoted ? "#3b82f6" : "#94a3b8", // blue for voted, gray otherwise
+                          background: `linear-gradient(135deg, #334155, #1e293b)` // dark blue gradient
+                        }}
+                      >
+                        {/* Card Back Design */}
+                        <div className="h-full w-full relative">
+                          {/* Diagonal Pattern */}
+                          <div className="absolute inset-0" 
+                            style={{
+                              background: "repeating-linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.1) 5px, transparent 5px, transparent 12px)",
+                              opacity: 0.3
+                            }}
+                          ></div>
+                          
+                          {/* Central Logo */}
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-12 h-12 bg-white bg-opacity-90 rounded-full flex items-center justify-center border-2 border-gray-300">
+                              <span className="text-blue-800 text-2xl font-bold">P</span>
                             </div>
-                          ) : (
-                            <div className={`text-center ${hasVoted ? '' : 'opacity-70'}`}>
-                              <div className="bg-gray-200 rounded-lg border border-gray-300 w-10 h-10 mx-auto flex items-center justify-center">
-                                <span className="text-xl text-gray-800 font-bold">
-                                  {hasVoted ? '?' : ''}
-                                </span>
-                              </div>
-                              <p className="mt-1 text-[10px] text-gray-600">
-                                {hasVoted ? 'Card Ready' : 'No Card'}
-                              </p>
+                          </div>
+                          
+                          {/* Name Badge */}
+                          <div className="absolute top-2 inset-x-0">
+                            <p className="mx-auto w-max bg-white bg-opacity-90 rounded px-2 py-0.5 text-gray-800 font-bold text-xs">
+                              {p.name}
+                              {p.isHost && <span className="ml-1 text-amber-600">♦</span>}
+                            </p>
+                          </div>
+                          
+                          {/* Voted Status */}
+                          {hasVoted && (
+                            <div className="absolute bottom-3 inset-x-0 flex justify-center">
+                              <span className="px-2 py-0.5 bg-blue-500 rounded-full text-white text-xs font-medium">
+                                Voted
+                              </span>
                             </div>
                           )}
-                        </>
-                      )}
-                      {!currentStory && (
-                        <div className="text-gray-500 text-center text-xs">
-                          <div className="bg-gray-100 rounded-lg w-8 h-8 mx-auto mb-1 flex items-center justify-center">
-                            <span className="text-lg">{suit}</span>
+                          
+                          {/* Decoration */}
+                          <div className="absolute top-2 left-2 text-white font-bold opacity-70 text-sm">
+                            {p.isHost ? 'H' : 'P'}
                           </div>
-                          Waiting
+                          <div className="absolute bottom-2 right-2 text-white font-bold opacity-70 text-sm transform rotate-180">
+                            {p.isHost ? 'H' : 'P'}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                    
-                    {/* Card Corners - Bottom Right (inverted) */}
-                    <div className="absolute bottom-1 right-1 flex flex-col items-end rotate-180">
-                      {votesRevealed ? (
-                        <>
+                      </div>
+                      
+                      {/* Card Front (visible when flipped) */}
+                      <div 
+                        className="absolute w-full h-full backface-hidden bg-white rounded-lg p-1 shadow-md border-2 border-gray-300"
+                        style={{ 
+                          backfaceVisibility: "hidden",
+                          transform: "rotateY(180deg)"
+                        }}
+                      >
+                        {/* Card Corners - Top Left */}
+                        <div className="absolute top-1 left-1 flex flex-col items-start">
                           <span className={`text-sm font-bold ${suitColor}`}>{voteValue || '?'}</span>
                           <span className={`text-sm ${suitColor}`}>{suit}</span>
-                        </>
-                      ) : (
-                        <span className={`text-sm font-bold text-gray-800`}>
-                          {p.isHost ? 'H' : 'P'}
-                        </span>
-                      )}
+                        </div>
+                        
+                        {/* Name Badge */}
+                        <div className="mt-2 text-center">
+                          <p className="bg-gray-100 rounded px-1 text-gray-800 font-bold truncate text-xs">{p.name}</p>
+                          {p.isHost && <span className="text-[10px] text-yellow-700 font-semibold">(Host)</span>}
+                        </div>
+                        
+                        {/* Card Center - Vote Value */}
+                        <div className="flex-grow flex items-center justify-center">
+                          <div className="flex items-center justify-center">
+                            <span className={`text-3xl font-bold ${suitColor}`}>
+                              {voteValue || '?'}
+                            </span>
+                            <span className={`text-3xl ml-1 ${suitColor}`}>{suit}</span>
+                          </div>
+                        </div>
+                        
+                        {/* Card Corners - Bottom Right (inverted) */}
+                        <div className="absolute bottom-1 right-1 flex flex-col items-end rotate-180">
+                          <span className={`text-sm font-bold ${suitColor}`}>{voteValue || '?'}</span>
+                          <span className={`text-sm ${suitColor}`}>{suit}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );
@@ -250,13 +287,30 @@ export default function SessionPage() {
                   className={`
                     rounded-md px-5 py-2 font-semibold shadow-md 
                     transition-all duration-300
-                    disabled:opacity-50
+                    disabled:opacity-50 relative overflow-hidden
                     ${isFlipping ? 'bg-yellow-500 text-gray-800' : 
-                      votesRevealed ? 'bg-green-600 hover:bg-green-700' : 'bg-green-600 hover:bg-green-700'}
+                      votesRevealed ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}
                   `}
                 >
-                  {isFlipping ? 'Flipping...' : 
-                   votesRevealed ? 'Cards Revealed' : 'Flip Cards'}
+                  {isFlipping ? (
+                    <div className="flex items-center justify-center">
+                      <span className="animate-pulse">Revealing Cards</span>
+                      <span className="ml-2 inline-block animate-spin">🎴</span>
+                    </div>
+                  ) : votesRevealed ? (
+                    <div className="flex items-center justify-center">
+                      <span>Cards Revealed</span>
+                      <span className="ml-2">👁️</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center">
+                      <span>Flip All Cards</span>
+                      <span className="ml-2 inline-block transition-transform duration-300 group-hover:rotate-180">🔄</span>
+                    </div>
+                  )}
+                  
+                  {/* Add shine effect on hover */}
+                  <div className="absolute inset-0 card-shine"></div>
                 </button>
                 <button
                   onClick={() => handleClearVotes()}
